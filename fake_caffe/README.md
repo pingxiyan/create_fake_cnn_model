@@ -8,6 +8,9 @@
     $ git clone https://github.com/BVLC/caffe.git
     $ cd caffe
     $ make pycaffe
-    $ export PYTHONPATH=`pwd`/caffe/python:${PYTHONPATH}
+    $ export PYTHONPATH=`pwd`/python:${PYTHONPATH}
 
 #### Creat fake model.
+    Refer caffe layer doc: http://caffe.berkeleyvision.org/tutorial/layers.html
+
+
