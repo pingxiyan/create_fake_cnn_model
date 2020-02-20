@@ -7,9 +7,7 @@ MESSAGE(STATUS "==================================-")
 MESSAGE(STATUS "Start:${TARGET_NAME}")
 
 FIND_PACKAGE( OpenCV REQUIRED )
-# find myown build caffe
-SET(CAFFE_PATH /home/xiping/mygithub/chenwei803/person_analysis/call_caffe)
-include(${CAFFE_PATH}/caffe_src_code/caffe.cmake)
+FIND_PACKAGE( Caffe REQUIRED HINTS /home/xiping/mygithub/create_fake_cnn_model/fake_caffe/caffe/build_cpu/install)
 
 ADD_DEFINITIONS(-std=c++11)
 #==========================================
@@ -24,5 +22,5 @@ ADD_EXECUTABLE(${TARGET_NAME}
 
 
 TARGET_LINK_LIBRARIES(${TARGET_NAME} ${OpenCV_LIBS} 
-	${caffe_libs} 
+	${Caffe_LIBRARIES}
 	)
