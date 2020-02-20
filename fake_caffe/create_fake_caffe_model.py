@@ -59,6 +59,32 @@ def create_prototxt():
 
     return model
 
+def get_expect_result():
+    zero_point = 221
+    scale = 0.3371347486972809
+
+    # Read the entire file as a single byte string
+
+    with open('expected_result_sim.dat', 'rb') as fl:
+        allBinData = fl.read()
+    floatData = np.zeros(125*13*13)
+
+    mutable_bytes = bytearray(allBinData)
+
+    print(type(mutable_bytes))
+    print(len(mutable_bytes))
+
+    print((mutable_bytes[0] - zero_point) * scale)
+    print((mutable_bytes[1] - zero_point) * scale)
+    print((mutable_bytes[2] - zero_point) * scale)
+    print((mutable_bytes[125*13*13-1] - zero_point) * scale)
+
+    float_data = np.zeros(len(mutable_bytes))
+    i = 0
+    for c in mutable_bytes:
+        float_data[i] = (c-zero_point)*scale;
+        i += 1
+    return float_data;
 
 def create_fake_weights_by_prototxt(cafffe_deploy_fn, cafffe_weight_fn):
     print("Start convert_weights")
@@ -96,8 +122,9 @@ def create_fake_weights_by_prototxt(cafffe_deploy_fn, cafffe_weight_fn):
             print("  weight shape =", net.params[name][0].data.shape)
             print("  bais shape =", net.params[name][1].data.shape)
 
-            # bais
-            net.params[name][1].data[...] = np.ones(net.params[name][1].data.shape)
+            # bais, set your expect param to here
+            # net.params[name][1].data[...] = np.ones(net.params[name][1].data.shape)
+            net.params[name][1].data[...] = get_expect_result()
             # weight
             net.params[name][0].data[...] = np.zeros(net.params[name][0].data.shape)
         else:
@@ -119,6 +146,8 @@ def ParsingParameter():
     return str2bool(args.show)
 
 def main():
+    # get_expect_result()
+    # return
     show_debug_info = ParsingParameter()
 
     """ script entry point """

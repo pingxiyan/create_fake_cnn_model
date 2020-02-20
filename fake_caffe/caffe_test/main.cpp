@@ -4,7 +4,7 @@
 using namespace caffe;
 
 #include <opencv2/opencv.hpp>
-
+#include "region_yolov2tiny.h"
 
 inline void print_fea(std::vector<float>& fea) {
 	for(size_t i = 0; i < fea.size(); i++) {
@@ -49,6 +49,8 @@ void caffe_infer(std::string model_weight, std::string model_prototxt) {
 		size_t last_layer_id = pvcaffe->layer_names().size() - 1;
 		_feaLayerName = pvcaffe->layer_names()[last_layer_id];
 	}
+	_feaLayerName = "conv2";
+	std::cout << "last layer = " << _feaLayerName << std::endl;
 
 	// // ************************************
 	// CHECK(reinterpret_cast<float*>(_vecInputMat.at(0).data)
@@ -73,7 +75,31 @@ void caffe_infer(std::string model_weight, std::string model_prototxt) {
 	const float* end = begin + feature_blob->channels();
 	std::vector<float> features = std::vector<float>(begin, end);
 	
-	print_fea(features);
+	std::cout << "output last layer size = " << features.size() << std::endl;
+	// print_fea(features);
+
+	std::cout << "Post process: " << std::endl;
+    int shape[]={13, 13, 5, 25};
+    int strides[]={13*128, 128, 25, 1};
+	float* outputRawData = new float[13*13*20*5 * 7];
+	postprocess::yolov2(&features[0], shape, strides, 
+		0.4f, 0.45f, 20, 416, 416, outputRawData);
+
+	std::cout << "====================== " << std::endl;
+ 	// imageid,labelid,confidence,x0,y0,x1,y1
+	auto rawData = outputRawData;
+	auto N = 13*13*20*5;
+	for (size_t i = 0; i < N; i++) {
+		if (rawData[i*7 + 2] > 0.001) {
+			std::cout << "confidence = " << rawData[i*7 + 2] << std::endl;
+			std::cout << "x0,y0,x1,y1 = " << rawData[i*7 + 3] << ", "
+				<< rawData[i*7 + 4] << ", "
+				<< rawData[i*7 + 5] << ", "
+				<< rawData[i*7 + 6] << std::endl;
+		}
+	}
+
+	delete[] outputRawData;
 }
 
 int main(int argc, char** argv) {
