@@ -255,7 +255,7 @@ static void get_region_boxes(const float *predictions, int *shape4D,
   }
   // correct_region_boxes(boxes, lw * lh * lnum, w, h, netw, neth, relative);
 }
-
+#include <stdio.h>
 int yolov2(const float *data, int *shape4D, int *strides4D,
            float thresh, float nms, int num_classes,
            int image_width, int image_height, float *result) {
@@ -278,7 +278,9 @@ int yolov2(const float *data, int *shape4D, int *strides4D,
   int neth = 416;
   float scalew = static_cast<float>(netw) / image_width;
   float scaleh = static_cast<float>(neth) / image_height;
-  float scale = scalew < scaleh ? scalew : scaleh;
+  
+  float scale = scalew < scaleh ? scalew : scaleh; 
+
   float new_width = image_width * scale;
   float new_height = image_height * scale;
   float pad_w = (netw - new_width) / 2.0;
@@ -290,24 +292,18 @@ int yolov2(const float *data, int *shape4D, int *strides4D,
       box &b = boxes[i];
       if (b.probs[j] == 0)
         continue;
-
       float xmin = b.x - b.w / 2.0;
       float ymin = b.y - b.h / 2.0;
       float xmax = xmin + b.w;
       float ymax = ymin + b.h;
-
       xmin = (xmin * netw - pad_w) / scale;
-      if (xmin < 0)
-        xmin = 0;
+      if (xmin < 0) xmin = 0;
       xmax = (xmax * netw - pad_w) / scale;
-      if (xmax >= image_width)
-        xmax = image_width - 1;
+      if (xmax >= image_width)  xmax = image_width - 1;
       ymin = (ymin * neth - pad_h) / scale;
-      if (ymin < 0)
-        ymin = 0;
+      if (ymin < 0) ymin = 0;
       ymax = (ymax * neth - pad_h) / scale;
-      if (ymax >= image_height)
-        ymax = image_height - 1;
+      if (ymax >= image_height) ymax = image_height - 1;
 
       // image_id, label, confidence, xmin, ymin, xmax, ymax
       result[k * 7 + 0] = 0;
