@@ -27,7 +27,11 @@
     Some dependencies:
     $ pip2 install scikit-image
 
+    Copy your expect data to current path: expected_result_sim.dat
     $ python2 ./create_fake_caffe_model.py
+
+    Convert to IR
+    $ cvt_to_ir.sh
 
     Q&A:
     If you still have problem. Maybe you must uninstall some conflict python lib.
