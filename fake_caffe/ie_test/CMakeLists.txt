@@ -1,8 +1,30 @@
-# Copyright (C) 2018-2019 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-#
+CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
 
-ie_add_sample(NAME kmb_detection_sample
-              SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/region_yolov2tiny.cpp"
-              HEADERS detection_sample.h
-              DEPENDENCIES format_reader vpusmm)
+SET (TARGET_NAME ie_test)
+
+PROJECT(${TARGET_NAME})
+
+ADD_DEFINITIONS(-std=c++11)
+
+FIND_PACKAGE(InferenceEngine REQUIRED)
+MESSAGE(STATUS "InferenceEngine_LIBRARIES= " ${InferenceEngine_LIBRARIES})
+
+FIND_PACKAGE(OpenCV REQUIRED)
+
+include_directories(
+    ${OpenCV_INCLUDE_DIRS} 
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${InferenceEngine_INCLUDE_DIRS}
+	)
+
+ADD_EXECUTABLE(${TARGET_NAME} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/region_yolov2tiny.cpp
+    )
+
+TARGET_LINK_LIBRARIES(${TARGET_NAME} 
+    ${OpenCV_LIBS}
+	libdl.so
+	${InferenceEngine_LIBRARIES}
+	IE::ie_cpu_extension
+	)
