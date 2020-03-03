@@ -38,20 +38,26 @@ def create_prototxt():
 
     # layer4: "" ->
     layers.append(cl.Pooling(layers[2], name="Pooling3", pool=cp.Pooling.MAX,
-                             stride=9,
-                             kernel_size=3))
-
+                             stride_h=7, stride_w=7,
+                             kernel_h=3, kernel_w=3,
+                             pad_h=0, pad_w=0))
     # layer5: "" ->
-    layers.append(cl.Convolution(layers[3], name="conv1",
-                                 kernel_size=1, stride=1, num_output=1))
+    layers.append(cl.Pooling(layers[3], name="Pooling4", pool=cp.Pooling.MAX,
+                             stride_h=2, stride_w=2,
+                             kernel_h=3, kernel_w=3,
+                             pad_h=0, pad_w=0))
 
     # layer6: "" ->
-    layers.append(cl.Convolution(layers[4], name="conv2",
-                                 kernel_size=1, stride=1, num_output=125*13*13))
+    layers.append(cl.Convolution(layers[4], name="conv1",
+                                 kernel_size=1, stride=1, num_output=1))
 
     # layer7: "" ->
-    reshape_fields = dict(reshape_param={"shape": {"dim": [-1, 125, 13, 13]}})
-    layers.append(cl.Reshape(layers[5], name="reshape", **reshape_fields))
+    layers.append(cl.Convolution(layers[5], name="conv2",
+                                 kernel_size=1, stride=1, num_output=125*13*13))
+
+    # layer8: "" ->
+    reshape_fields = dict(reshape_param={"shape": {"dim": [0, 125, 13, -1]}})
+    layers.append(cl.Reshape(layers[6], name="reshape", **reshape_fields))
 
     model = caffe.NetSpec()
     for layer in layers:
@@ -59,6 +65,36 @@ def create_prototxt():
 
     return model
 
+def get_expect_result():
+    zero_point = 221
+    scale = 0.3371347486972809
+
+    # Read the entire file as a single byte string
+
+    with open('expected_result_sim.dat', 'rb') as fl:
+        allBinData = fl.read()
+    floatData = np.zeros(125*13*13)
+
+    mutable_bytes = bytearray(allBinData)
+
+    print(type(mutable_bytes))
+    print(len(mutable_bytes))
+
+    # print((mutable_bytes[0] + zero_point) * scale)
+    # print((mutable_bytes[1] + zero_point) * scale)
+    # print((mutable_bytes[125*13*13-1] + zero_point) * scale)
+
+    float_data = np.zeros(len(mutable_bytes))
+    i = 0
+    for c in mutable_bytes:
+        float_data[i] = (c - zero_point)*scale;
+        i += 1
+    
+    print("param 0 = ", float_data[0])
+    print("param 1 = ", float_data[1])
+    print("param 125*13*13-1 = ", float_data[125*13*13-1])
+
+    return float_data;
 
 def create_fake_weights_by_prototxt(cafffe_deploy_fn, cafffe_weight_fn):
     print("Start convert_weights")
@@ -96,8 +132,9 @@ def create_fake_weights_by_prototxt(cafffe_deploy_fn, cafffe_weight_fn):
             print("  weight shape =", net.params[name][0].data.shape)
             print("  bais shape =", net.params[name][1].data.shape)
 
-            # bais
-            net.params[name][1].data[...] = np.ones(net.params[name][1].data.shape)
+            # bais, set your expect param to here
+            # net.params[name][1].data[...] = np.ones(net.params[name][1].data.shape)
+            net.params[name][1].data[...] = get_expect_result()
             # weight
             net.params[name][0].data[...] = np.zeros(net.params[name][0].data.shape)
         else:
@@ -119,6 +156,8 @@ def ParsingParameter():
     return str2bool(args.show)
 
 def main():
+    # get_expect_result()
+    # return
     show_debug_info = ParsingParameter()
 
     """ script entry point """

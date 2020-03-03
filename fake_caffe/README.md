@@ -13,34 +13,27 @@
 
     $ git clone https://github.com/BVLC/caffe.git
     $ cd caffe
-
-    Modify Makefile.config.example->Makefile.config
-    $ diff Makefile.config.example Makefile.config
-	8c8
-	< # CPU_ONLY := 1
-	---
-	> CPU_ONLY := 1
-	11c11
-	< # USE_OPENCV := 0
-	---
-	> USE_OPENCV := 0
-	15c15
-	< # USE_HDF5 := 0
-	---
-	> USE_HDF5 := 0
-	94c94
-	< # WITH_PYTHON_LAYER := 1
-	---
-	> WITH_PYTHON_LAYER := 1
-
-
-    $ make pycaffe
-    $ export PYTHONPATH=`pwd`/python:${PYTHONPATH}
+    $ mkdir build
+    $ cd build
+    $ cmake -DUSE_OPENCV=OFF -DCPU_ONLY=ON ..
+    $ make -j
+    $ mkdir intall
+    $ make install PREFIX=`pwd`/install
+    $ export PYTHONPATH=`pwd`/install/python:${PYTHONPATH}
 
 #### Creat fake model.
     Refer caffe layer doc: http://caffe.berkeleyvision.org/tutorial/layers.html
 
+    Some dependencies:
+    $ pip2 install scikit-image
+
+    Copy your expect data to current path: expected_result_sim.dat
     $ python2 ./create_fake_caffe_model.py
 
-#### Verify model.
+    Convert to IR
+    $ cvt_to_ir.sh
 
+    Q&A:
+    If you still have problem. Maybe you must uninstall some conflict python lib.
+
+#### Verify model.
