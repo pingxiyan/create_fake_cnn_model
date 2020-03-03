@@ -25,7 +25,6 @@
 #include <opencv2/opencv.hpp>
 #include <inference_engine.hpp>
 #include "region_yolov2tiny.h"
-#include <ext_list.hpp>
 
 using namespace InferenceEngine;
 
@@ -108,14 +107,14 @@ int main(int argc, char *argv[]) {
         // std::cout << ie.GetVersions(dev) << std::endl;
 
         /*If CPU device, load default library with extensions that comes with the product*/
-        if (std::string("CPU") == dev) {
-            /**
-            * cpu_extensions library is compiled from "extension" folder containing
-            * custom MKLDNNPlugin layer implementations. These layers are not supported
-            * by mkldnn, but they can be useful for inferring custom topologies.
-            **/
-            ie.AddExtension(std::make_shared<Extensions::Cpu::CpuExtensions>(), "CPU");
-        }
+        // if (std::string("CPU") == dev) {
+        //     /**
+        //     * cpu_extensions library is compiled from "extension" folder containing
+        //     * custom MKLDNNPlugin layer implementations. These layers are not supported
+        //     * by mkldnn, but they can be useful for inferring custom topologies.
+        //     **/
+        //     ie.AddExtension(std::make_shared<Extensions::Cpu::CpuExtensions>(), "CPU");
+        // }
 
         std::string binFileName = modelBin;
 
@@ -137,7 +136,7 @@ int main(int argc, char *argv[]) {
         inputInfoItem.second->setPrecision(Precision::U8);
         inputInfoItem.second->setLayout(Layout::NCHW);
 
-        ExecutableNetwork executable_network = ie.LoadNetwork(network, dev, {});
+        ExecutableNetwork executable_network = ie.LoadNetwork(network, dev);
         InferRequest infer_request = executable_network.CreateInferRequest();
 
         // --------------------------- 5. Prepare input --------------------------------------------------------

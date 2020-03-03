@@ -26,5 +26,4 @@ TARGET_LINK_LIBRARIES(${TARGET_NAME}
     ${OpenCV_LIBS}
 	libdl.so
 	${InferenceEngine_LIBRARIES}
-	IE::ie_cpu_extension
 	)
