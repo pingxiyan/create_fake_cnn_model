@@ -48,15 +48,32 @@ Blob::Ptr yoloLayer_yolov2tiny(const Blob::Ptr &lastBlob, int inputHeight, int i
     return outputBlob;
 }
 
+void putImg2InputBlob(const cv::Mat& img, Blob::Ptr inputBlob)
+{
+	uint8_t * blob_data = inputBlob->buffer().as<uint8_t*>();
+
+    cv::Mat rsz;
+    cv::resize(img, rsz, cv::Size(416,416));
+
+	for (int c = 0; c < 3; c++) {
+		for (int h = 0; h < rsz.rows; h++) {
+			for (int w = 0; w < rsz.cols; w++) {
+				blob_data[c * rsz.rows * rsz.cols + h * rsz.cols + w] = 
+                    rsz.at<cv::Vec3b>(h, w)[c];
+			}
+		}
+	}
+}
+
 /**
 * @brief The entry point the Inference Engine sample application
 * @file detection_sample/main.cpp
 * @example detection_sample/main.cpp
 */
 int main(int argc, char *argv[]) {
-    std::string modelXml = "";
-    std::string modelBin = "";
-    std::string imgFN = "";
+    std::string modelXml = "../../fake_model.xml";
+    std::string modelBin = "../../fake_model.bin";
+    std::string imgFN = "../fish-bike.jpg";
     std::string dev = "CPU";
     if(argc == 2 && argv[1] == std::string("-h")) {
         std::cout << "argv[1] = xml" << std::endl;
@@ -129,11 +146,7 @@ int main(int argc, char *argv[]) {
         if (!inputBlob) {
             throw std::logic_error("Cannot get input blob from inferRequest");
         }
-        
-        // Copy image
-        cv::Mat rsz;
-        cv::resize(inputMat, rsz, cv::Size(416,416));
-        // memcpy(inputBlob->data, rsz.data, rsz.rows*rsz.cols*3);
+        putImg2InputBlob(inputMat, inputBlob);
 
         infer_request.Infer();
         std::cout << "infer_request completed successfully" << std::endl;
