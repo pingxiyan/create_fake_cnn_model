@@ -255,7 +255,7 @@ static void get_region_boxes(const float *predictions, int *shape4D,
   }
   // correct_region_boxes(boxes, lw * lh * lnum, w, h, netw, neth, relative);
 }
-
+#include "stdio.h"
 int yolov2(const float *data, int *shape4D, int *strides4D,
            float thresh, float nms, int num_classes,
            int image_width, int image_height, float *result) {
@@ -290,6 +290,10 @@ int yolov2(const float *data, int *shape4D, int *strides4D,
       box &b = boxes[i];
       if (b.probs[j] == 0)
         continue;
+        
+      printf("conf,xywh, %f,%f,%f,%f,%f \n", b.probs[j], b.x, b.y,b.w,b.h);
+      // printf("conf,xywh, %f,%f,%f,%f,%f \n", b.probs[j], xmin, ymin, xmax, ymax);
+      
 
       float xmin = b.x - b.w / 2.0;
       float ymin = b.y - b.h / 2.0;
@@ -317,7 +321,7 @@ int yolov2(const float *data, int *shape4D, int *strides4D,
       result[k * 7 + 4] = ymin;
       result[k * 7 + 5] = xmax;
       result[k * 7 + 6] = ymax;
-
+      
       k++;
     }
   }

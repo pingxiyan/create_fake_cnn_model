@@ -23,8 +23,22 @@
 
 #### Creat fake model.
     Refer caffe layer doc: http://caffe.berkeleyvision.org/tutorial/layers.html
+    
+    Python virtualenv is recommanded.
+    $ pip install virtualenv
+	# Python 2:
+	$ virtualenv env
+	# Python 3
+	$ python3 -m venv env
+
+	# Enter virtual env
+	$ source env/bin/activate 
+
+	# Eixt virtual env
+	$ deactivate
 
     Some dependencies:
+    $ pip2 install protobuf
     $ pip2 install scikit-image
 
     Copy your expect data to current path: expected_result_sim.dat
