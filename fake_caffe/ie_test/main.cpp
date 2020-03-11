@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <tuple>
 #include <list>
+#include <chrono>
 
 #include <opencv2/opencv.hpp>
 #include <inference_engine.hpp>
@@ -68,12 +69,100 @@ void putImg2InputBlob(const cv::Mat& img, Blob::Ptr inputBlob)
 	}
 }
 
+int test_video() {
+    std::string modelXml = "../tiny_yolo_v2_model_zc/yolov2_tiny_od_yolo_IR_fp32.xml";
+    std::string modelBin = "../tiny_yolo_v2_model_zc/yolov2_tiny_od_yolo_IR_fp32.bin";
+    std::string videoPath = "/home/xiping/mydisk2/mygithub/chenwei803/person_analysis/test_videos/";
+    
+    std::string videofn = videoPath + "IMG_4995.MOV";
+    videofn = videoPath + "00016.avi";
+    
+    std::string dev = "CPU";
+
+    cv::VideoCapture capture(videofn);
+    // capture.open();
+
+    if (!capture.isOpened()) {
+        std::cout << "Error when reading input stream";
+        return 0;
+    }
+
+    Core ie;
+    CNNNetReader networkReader;
+    /** Read network model **/
+    networkReader.ReadNetwork(modelXml);
+
+    /** Extract model name and load weights **/
+    networkReader.ReadWeights(modelBin);
+    CNNNetwork network = networkReader.getNetwork();
+
+    InputsDataMap inputsInfo(network.getInputsInfo());
+    if (inputsInfo.size() != 1 && inputsInfo.size() != 2) throw std::logic_error("Sample supports topologies only with 1 or 2 inputs");
+
+    auto inputInfoItem = *inputsInfo.begin();
+
+    /** Specifying the precision and layout of input data provided by the user.
+     * This should be called before load of the network to the device **/
+    inputInfoItem.second->setPrecision(Precision::U8);
+    inputInfoItem.second->setLayout(Layout::NCHW);
+
+    ExecutableNetwork executable_network = ie.LoadNetwork(network, dev);
+    InferRequest infer_request = executable_network.CreateInferRequest();
+
+    for(;;) {
+        cv::Mat frame;
+        capture >> frame;
+        if(frame.empty()) {
+            break;
+        }
+        cv::Mat inputMat;
+        cv::resize(frame, inputMat, cv::Size(416, 416));
+
+        Blob::Ptr inputBlob = infer_request.GetBlob(inputsInfo.begin()->first);
+        if (!inputBlob) {
+            throw std::logic_error("Cannot get input blob from inferRequest");
+        }
+        
+        putImg2InputBlob(inputMat, inputBlob);
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        infer_request.Infer();
+        auto t2 = std::chrono::high_resolution_clock::now();
+        double tm = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        std::cout << "infer_request completed successfully: " << tm << " ms" << std::endl;
+        // -----------------------------------------------------------------------------------------------------
+
+        // --------------------------- 6. Process output -------------------------------------------------------
+        // std::cout << "Processing output blobs" << std::endl;
+        OutputsDataMap outputInfo(network.getOutputsInfo());
+        if (outputInfo.size() != 1) throw std::logic_error("Sample supports topologies with 1 output only");
+        Blob::Ptr outputBlob = infer_request.GetBlob(outputInfo.begin()->first);
+
+        std::vector<DetectedObject_t> rlst = YoloV2Tiny::TensorToBBoxYoloV2TinyCommon(outputBlob, 
+            inputMat.rows, inputMat.cols, 0.6, YoloV2Tiny::fillRawNetOut);
+
+        for(auto r : rlst) {
+            // std::cout << r.x << ", " << r.y << ", "  << r.width << ", "  <<
+            //     r.height << ", "  << r.confidence << ", " << std::endl;
+            
+            cv::Rect rt = cv::Rect(r.x, r.y, r.width, r.height);
+            cv::rectangle(inputMat, rt, cv::Scalar(0,0,255), 1);
+
+        }
+        cv::imshow("s", inputMat);
+        cv::waitKey(1);
+    }
+    return 0;
+}
+
 /**
 * @brief The entry point the Inference Engine sample application
 * @file detection_sample/main.cpp
 * @example detection_sample/main.cpp
 */
 int main(int argc, char *argv[]) {
+    return test_video();
+
     std::string modelXml = "../../fake_model.xml";
     std::string modelBin = "../../fake_model.bin";
     modelXml = "../darknet_tiny_yolo_voc/optimized/tiny_yolo_v2.xml";
