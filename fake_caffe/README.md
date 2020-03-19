@@ -45,6 +45,10 @@
     $ python2 ./create_fake_caffe_model.py
 
     Convert to IR
+    $ pip3 install numpy
+    $ pip3 install networkx
+    $ pip3 install defusedxml
+
     $ cvt_to_ir.sh
 
     Q&A:
