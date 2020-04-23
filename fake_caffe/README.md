@@ -55,3 +55,6 @@
     If you still have problem. Maybe you must uninstall some conflict python lib.
 
 #### Verify model.
+    Internal script, how to test tiny yolo v2. <br>
+    ssh://git@gitlab.devtools.intel.com:29418/xipingya/verify_nn.git <br>
+    
